@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import Axios from 'axios';
 
+import { Modal } from './styles/modals';
+import { Input } from './styles/inputs';
+import { Button } from './styles/buttons';
 import BackDrop from './commom/backDrop';
+
+import SubmitRegister from '../lib/class/submitRegister';
 
 const Register = ({ register, setRegister }) => {
     const [name, setName] = useState('');
@@ -10,93 +14,158 @@ const Register = ({ register, setRegister }) => {
     const [password, setPassword] = useState('');
     const [password2, setPassword2] = useState('');
 
+    const borderColor = { border: '1px solid grey' };
+    const [nameInputStyle, setNameInputStyle] = useState(borderColor);
+    const [emailInputStyle, setEmailInputStyle] = useState(borderColor);
+    const [passwordInputStyle, setPasswordInputStyle] = useState(borderColor);
+    const [password2InputStyle, setPassword2InputStyle] = useState(borderColor);
+
     const handleSubmit = (e) => {
-        //TODO 前端未寫表單驗證
-        Axios.post('http://localhost:3000/api/users', {
-            name: 'tester1',
-            email: 'tester1@gmail.com',
-            password: 'tester1',
-        })
-            .then((res) => {
-                alert('註冊成功!!');
-                console.log(res.data);
-            })
-            .catch((err) => {
-                alert('註冊失敗!!');
-                console.error(err.message);
-            });
         e.preventDefault();
+
+        // 再次驗證表單
+        const formValue = {
+            name: name,
+            email: email,
+            password: password,
+            setNameInputStyle: setNameInputStyle,
+            setEmailInputStyle: setEmailInputStyle,
+            setPasswordInputStyle: setPasswordInputStyle,
+        };
+        const formValidater = new SubmitRegister(formValue);
+
+        formValidater.validateAll().postToServer();
     };
 
-    return register ? (
-        <div>
+    const handleValidateName = (e) => {
+        const inputValue = e.target.value;
+        setName(inputValue);
+
+        const formValue = {
+            name: inputValue,
+            setNameInputStyle: setNameInputStyle,
+        };
+        const formValidater = new SubmitRegister(formValue);
+
+        formValidater.validateName();
+    };
+
+    const handleValidateEmail = (e) => {
+        const inputValue = e.target.value;
+        setEmail(inputValue);
+
+        const formValue = {
+            email: inputValue,
+            setEmailInputStyle: setEmailInputStyle,
+        };
+        const formValidater = new SubmitRegister(formValue);
+
+        formValidater.validateEmail();
+    };
+
+    const handleValidatePassword = (e) => {
+        const inputValue = e.target.value;
+        setPassword(inputValue);
+        setPassword2('');
+        setPassword2InputStyle({ border: '1px solid grey' });
+
+        const formValue = {
+            password: inputValue,
+            setPasswordInputStyle: setPasswordInputStyle,
+        };
+        const formValidater = new SubmitRegister(formValue);
+
+        formValidater.validatePassword();
+    };
+
+    const handleValidatePassword2 = (e) => {
+        const inputValue = e.target.value;
+        setPassword2(inputValue);
+
+        const inputStyle =
+            password === inputValue
+                ? { border: '2px solid green' }
+                : { border: '2px solid red' };
+        setPassword2InputStyle(inputStyle);
+    };
+
+    const RegisterComponent = (
+        <>
             <Modal>
-                <h2>register</h2>
-                <form onSubmit={handleSubmit}>
-                    <div>
-                        <label>
-                            <p>使用者名稱</p>
-                            <input
-                                type="text"
-                                minLength="3"
-                                onChange={(e) => setName(e.target.value)}
-                                value="tester1"
-                                required
-                            />
-                        </label>
-                    </div>
-                    <div>
-                        <label>
-                            <p>電子信箱</p>
-                            <input
-                                type="email"
-                                onChange={(e) => setEmail(e.target.value)}
-                                value="tester1@gmail.com"
-                                required
-                            />
-                        </label>
-                    </div>
-                    <div>
-                        <label>
-                            <p>密碼</p>
-                            <input
-                                type="password"
-                                minLength="5"
-                                onChange={(e) => setPassword(e.target.value)}
-                                value="tester1"
-                                required
-                            />
-                        </label>
-                    </div>
-                    <div>
-                        <label>
-                            <p>確認密碼</p>
-                            <input
-                                type="password"
-                                minLength="5"
-                                onChange={(e) => setPassword2(e.target.value)}
-                                value="tester1"
-                                required
-                            />
-                        </label>
-                    </div>
-                    <button type="submit">submit</button>
-                </form>
+                <Title>註冊</Title>
+                <Form onSubmit={handleSubmit}>
+                    <FormRow>
+                        <Input
+                            type="text"
+                            placeholder="使用者名稱"
+                            width="100%"
+                            value={name}
+                            style={nameInputStyle}
+                            onChange={handleValidateName}
+                            autoFocus
+                            required
+                        />
+                    </FormRow>
+                    <FormRow>
+                        <Input
+                            type="email"
+                            placeholder="電子信箱"
+                            width="100%"
+                            value={email}
+                            style={emailInputStyle}
+                            onChange={handleValidateEmail}
+                            required
+                        />
+                    </FormRow>
+                    <FormRow>
+                        <Input
+                            type="password"
+                            placeholder="密碼"
+                            width="100%"
+                            value={password}
+                            style={passwordInputStyle}
+                            onChange={handleValidatePassword}
+                            required
+                        />
+                    </FormRow>
+                    <FormRow>
+                        <Input
+                            type="password"
+                            placeholder="確認密碼"
+                            width="100%"
+                            value={password2}
+                            style={password2InputStyle}
+                            onChange={handleValidatePassword2}
+                            required
+                        />
+                    </FormRow>
+                    <Button type="submit" bgColor="#8a8a8a">
+                        立即註冊
+                    </Button>
+                </Form>
             </Modal>
             <BackDrop setFunction={setRegister} />
-        </div>
-    ) : null;
+        </>
+    );
+    return register ? RegisterComponent : null;
 };
 
 export default Register;
 
-const Modal = styled.section`
-    width: 500px;
-    padding: 25px;
-    border-radius: 10px;
-    position: fixed;
-    z-index: 999;
-    top: 20%;
-    left: calc(50% - 250px);
-    background-color: white;
+const Title = styled.h2`
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+`;
+
+const Form = styled.form`
+    width: 400px;
+    margin: auto;
+    margin-bottom: 50px;
+`;
+
+const FormRow = styled.div`
+    margin-bottom: 20px;
 `;

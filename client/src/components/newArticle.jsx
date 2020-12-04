@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import Axios from 'axios';
+import Button from './commom/baseTag/button';
+import BaseInput from './commom/baseTag/Input';
+import Select from './commom/baseTag/select';
+import activeList from '../lib/activeList.js';
 
+import { x } from 'joi';
+// TODO primaryType  minorType 共用 其他動態
 const NewArticle = () => {
-    const [board, setBoard] = useState('');
-    const [date, setDate] = useState('');
-    const [people, setPeople] = useState('');
+    const [primaryType, setPrimaryType] = useState('');
+    const [minorType, setMinorType] = useState('');
+
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+
     const handleSubmit = (e) => {
+        if (minorType === '') {
+            alert('請選擇minorprimary');
+            return;
+        }
+        console.log(primaryType, minorType, date, people, title, content);
         Axios.post('http://localhost:3000/api/newarticle', {
-            board: 'testboard',
-            date: 'testdate',
-            people: 5,
-            title: 'testtitle',
-            content: 'tsetcontent',
+            primaryType,
+            minorType,
+            date,
+            people,
+            title,
+            content,
         })
             .then((res) => {
                 alert('上傳成功');
@@ -25,83 +38,202 @@ const NewArticle = () => {
     };
     return (
         <Container>
+            <Title className="title">新增活動</Title>{' '}
             <Form onSubmit={handleSubmit}>
                 <Upperlock>
-                    <Select required onChange={(e) => setBoard(e.target.value)}>
+                    <SelectPrimaryType
+                        required
+                        onChange={(e) => {
+                            setPrimaryType(e.target.value);
+                        }}
+                    >
                         <option value="" hidden>
-                            請選擇分類
+                            主分類
                         </option>
-                        <option value="休閒">休閒</option>
-                        <option value="運動">運動</option>
-                        <option value="旅遊">旅遊</option>
-                    </Select>
-                    <label htmlFor="date"></label>
-                    <input
-                        id="date"
-                        type="text"
-                        onChange={(e) => setDate(e.target.value)}
-                    ></input>
-                    <label htmlFor="people"></label>
-                    <input
-                        id="people"
-                        type="number"
-                        placeholder="人數"
-                        onChange={(e) => setPeople(e.target.value)}
-                    />
+                        {activeList.map((x) => {
+                            return (
+                                <option
+                                    value={x.primaryType}
+                                    key={x.primaryType}
+                                >
+                                    {x.primaryType}
+                                </option>
+                            );
+                        })}
+                    </SelectPrimaryType>
+
+                    {primaryType ? (
+                        <>
+                            <SelectMinorType
+                                required
+                                onChange={(e) => {
+                                    setMinorType(e.target.value);
+                                }}
+                            >
+                                <option value="" hidden>
+                                    次分類
+                                </option>
+                                {activeList[
+                                    activeList
+                                        .map((x) => x.primaryType)
+                                        .indexOf(primaryType)
+                                ].subActiveList.map((x) => {
+                                    console.log(x);
+                                    return (
+                                        <option
+                                            value={x.primaryType}
+                                            key={x.minorType}
+                                        >
+                                            {x.minorType}
+                                        </option>
+                                    );
+                                })}
+                            </SelectMinorType>
+                        </>
+                    ) : null}
                 </Upperlock>
+
                 <LowerBlock>
-                    <input
+                    <Input
                         type="text"
                         placeholder="標題"
                         onChange={(e) => setTitle(e.target.value)}
                     />
-                    <textarea
-                        name=""
-                        id=""
-                        cols="50"
-                        rows="20"
-                        onChange={(e) => setContent(e.target.value)}
-                    ></textarea>
+                    <TextAreaBox>
+                        <Dummy>{content}</Dummy>
+                        <TextArea
+                            name=""
+                            id=""
+                            onChange={(e) => setContent(e.target.value)}
+                        ></TextArea>
+                    </TextAreaBox>
                 </LowerBlock>
-                <SendBtn type="submit">送出</SendBtn>
             </Form>
+            <Footer>
+                <button className="btnCancel">取消</button>
+                <button className="btnNext">下一步</button>
+            </Footer>
         </Container>
     );
 };
-
 export default NewArticle;
-
-const Container = styled.div``;
-const Form = styled.form``;
-const Upperlock = styled.div`
-    input[type='date'] {
-        width: 200px;
-    }
-    input[type='text'] {
-    }
-`;
-
-const Select = styled.select`
-    margin: 20px;
-    padding: 10px;
-    text-align: center;
-    border-radius: 5px;
-    &:focus {
-        outline: none;
-    }
-    option {
-        width: 100%;
-        height: 100%;
-        text-align: center;
-        padding: 0;
-        margin: 0 auto;
-    }
-    input[type='text'] {
-    }
-`;
-const LowerBlock = styled.div`
+const Container = styled.div`
+    max-width: 800px;
+    min-height: calc(100vh - 80px);
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
 `;
+const Title = styled.h2`
+    font-size: 28px;
+    padding: 20px 0;
+    text-align: center;
+    border-bottom: 1px solid black;
+    margin-bottom: 20px;
+    font-weight: 700;
+`;
+const Form = styled.form`
+    height: 100%;
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    position: relative;
+    padding: 0 10px;
+`;
+const Upperlock = styled.div`
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+`;
+const SelectPrimaryType = styled(Select)``;
+const SelectMinorType = styled(Select)``;
+const Input = styled(BaseInput)`
+    height: 40px;
+    border: 1px solid #dadce0;
+`;
+const Label = styled.label`
+    display: flex;
+    flex-grow: 1;
+    white-space: nowrap;
+    align-items: center;
+    margin: 0 10px;
+`;
+const Span = styled.span`
+    padding-right: 10px;
+    /* margin: 0 10px; */
+`;
 
-const SendBtn = styled.button``;
+const LowerBlock = styled.div`
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    input[type='text'] {
+        margin-bottom: 16px;
+    }
+`;
+const TextAreaBox = styled.div`
+    position: relative;
+    background: red;
+    flex-grow: 1;
+`;
+const Dummy = styled.div`
+    padding: 2px;
+    border: 1px solid;
+    visibility: hidden;
+    white-space: pre-wrap;
+    overflow: hidden;
+    word-wrap: break-word;
+    word-break: break-all;
+    &:after {
+        content: ' ';
+    }
+`;
+const TextArea = styled.textarea`
+    width: 100%;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    border: none;
+    resize: none;
+    border: 1px solid #dadce0;
+    /* overflow-wrap: break-word; */
+
+    overflow-y: hidden;
+    font: inherit;
+
+    &:focus {
+        outline: none;
+    }
+`;
+
+const SendBtn = styled(Button)`
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #b2bec3;
+`;
+
+const Footer = styled.footer`
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: sticky;
+    right: 0;
+    left: 0;
+    bottom: 0;
+
+    button {
+        height: 44px;
+        padding: 0 8px;
+        border-radius: 5px;
+        &:hover {
+            background: rgb(90, 176, 219);
+        }
+    }
+    .btnNext {
+        margin-left: 16px;
+    }
+`;
